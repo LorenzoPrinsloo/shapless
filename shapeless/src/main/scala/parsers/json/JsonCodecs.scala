@@ -1,14 +1,14 @@
 package parsers.json
 
-import Macros.Reflection._
+import com.github.dwickern.macros.NameOf._
 import parsers.json.JsonUtils.createEncoder
 import shapeless.{::, Generic, HList, HNil}
 
 object JsonCodecs {
-  implicit val string: JsonEncoder[String] = createEncoder(str => Map(s"${getName(str)}" -> s"'$str'"))
-  implicit val int: JsonEncoder[Int] = createEncoder(int => Map("int" -> s"$int"))
-  implicit val bool: JsonEncoder[Boolean] = createEncoder(bool => Map("bool" -> s"$bool"))
-  implicit val bigDec: JsonEncoder[BigDecimal] = createEncoder(bigDec => Map("bigDec" -> s"$bigDec"))
+  implicit val string: JsonEncoder[String] = createEncoder(str => Map(s"${str.hashCode}" -> s"'$str'"))
+  implicit val int: JsonEncoder[Int] = createEncoder(int => Map(s"${int.hashCode}" -> s"$int"))
+  implicit val bool: JsonEncoder[Boolean] = createEncoder(bool => Map(s"${bool.hashCode}" -> s"$bool"))
+  implicit val bigDec: JsonEncoder[BigDecimal] = createEncoder(bd => Map(s"${bd.hashCode}" -> s"$bd"))
   implicit val hnil: JsonEncoder[HNil] = createEncoder(_ => Map.empty[String, String])
 
   implicit def hlist[H, T <: HList](implicit hEnc: JsonEncoder[H], tEnc: JsonEncoder[T]): JsonEncoder[H :: T] =
