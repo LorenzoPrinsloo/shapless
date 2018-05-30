@@ -1,0 +1,18 @@
+*~
+.#*
+.git
+*#
+
+# os x stuff
+*Thumbs.db*
+*.DS_Store
+
+# Build artifacts
+target
+
+# Intellij IDEA files
+*.ipr
+*.iws
+*.idea
+atlassian-ide-plugin.xml
+*.sc
