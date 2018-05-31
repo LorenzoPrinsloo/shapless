@@ -30,8 +30,6 @@ lazy val global = {
 //SHAPELESS
 
 val `shapeless-dependencies` = Seq(
-  "lorenzo.experimental" %% "shapeless-utils" % "0.0.4",
-  "com.github.dwickern" %% "scala-nameof" % "1.0.3" % "provided"
 )
 
 lazy val `shapeless` = (project in file("./shapeless"))

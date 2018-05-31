@@ -1,19 +1,37 @@
 package parsers.json
 
-import com.github.dwickern.macros.NameOf._
-import parsers.json.JsonUtils.createEncoder
-import shapeless.{::, Generic, HList, HNil}
+import parsers.json.Encoders.{JsonEncoder, JsonObjectEncoder}
+import parsers.json.JsonADTs._
+import shapeless.labelled.FieldType
+import shapeless.{::, HList, HNil, LabelledGeneric, Lazy, Witness}
 
 object JsonCodecs {
-  implicit val string: JsonEncoder[String] = createEncoder(str => Map(s"${str.hashCode}" -> s"'$str'"))
-  implicit val int: JsonEncoder[Int] = createEncoder(int => Map(s"${int.hashCode}" -> s"$int"))
-  implicit val bool: JsonEncoder[Boolean] = createEncoder(bool => Map(s"${bool.hashCode}" -> s"$bool"))
-  implicit val bigDec: JsonEncoder[BigDecimal] = createEncoder(bd => Map(s"${bd.hashCode}" -> s"$bd"))
-  implicit val hnil: JsonEncoder[HNil] = createEncoder(_ => Map.empty[String, String])
+  import parsers.json.Encoders.JsonEncoder._
 
-  implicit def hlist[H, T <: HList](implicit hEnc: JsonEncoder[H], tEnc: JsonEncoder[T]): JsonEncoder[H :: T] =
-    createEncoder { case h :: t => hEnc.encode(h) ++ tEnc.encode(t)}
+  implicit val stringEncoder: JsonEncoder[String] = pure(str => JsonString(str))
+  implicit val numberEncoder: JsonEncoder[Double] = pure(num => JsonNumber(num))
+  implicit val intEncoder: JsonEncoder[Int] = pure(int => JsonInt(int))
+  implicit val bigDecimalEncoder: JsonEncoder[BigDecimal] = pure(bd => JsonBigDecimal(bd))
+  implicit val boolEncoder: JsonEncoder[Boolean] = pure(bool => JsonBoolean(bool))
 
-  implicit def gen[A, R](implicit g: Generic.Aux[A, R], enc: JsonEncoder[R]): JsonEncoder[A] =
-    createEncoder(a => enc.encode(g.to(a)))
+  implicit def  optionEncoder[A](implicit encoder: JsonEncoder[A]): JsonEncoder[Option[A]] =
+    pure(opt => opt.map(encoder.encode).getOrElse(JsonNull))
+
+  implicit def listEncoder[A](implicit encoder: JsonEncoder[A]): JsonEncoder[List[A]] =
+    pure(list => JsonArray(list.map(encoder.encode)))
+
+  implicit val hnilEncoder: JsonObjectEncoder[HNil] =
+    pureObj(_ => JsonObject(Nil))
+
+  implicit def hlistEncoder[K <: Symbol, H, T <: HList]
+  (implicit witness: Witness.Aux[K], hEnc: Lazy[JsonEncoder[H]], tEnc: JsonObjectEncoder[T])
+  : JsonObjectEncoder[FieldType[K, H] :: T] = pureObj {
+    case head :: tail =>
+      val hField = witness.value.name -> hEnc.value.encode(head)
+      val tFields = tEnc.encode(tail).fields
+        JsonObject(hField :: tFields)
+  }
+
+  implicit def genericEncoder[A, R](implicit lgen: LabelledGeneric.Aux[A, R], enc: Lazy[JsonEncoder[R]]): JsonEncoder[A] =
+    pure(a => enc.value.encode(lgen.to(a)))
 }
