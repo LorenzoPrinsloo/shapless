@@ -3,6 +3,8 @@
 import parsers.json.Encoders.JsonEncoder
 import parsers.json.JsonADTs.Json
 import parsers.json.JsonCodecs._
+import shapeless.ops.hlist.Last
+import shapeless.{::, Generic, HList, LabelledGeneric, Witness, HNil}
 
 object Main extends App {
 
@@ -16,4 +18,22 @@ object Main extends App {
   println(encoded)
   println()
   println(Json.stringify(encoded))
+  println()
+
+  println(LabelledGeneric[Person].to(lr))
+  println(LabelledGeneric[Person].from(LabelledGeneric[Person].to(lr)))
+
+ val last = Last[String :: String :: Int :: Boolean :: BigDecimal :: List[String] :: HNil]
+
+  trait Second[L <: HList] {
+    type Out
+    def apply(value: L): Out
+  }
+  object Second {
+    type Aux[L <: HList, O] = Second[L] { type Out = O }
+
+    def apply[L <: HList](implicit inst: Second[L]): Aux[L, inst.Out] = inst
+  }
+
+  lr.productIterator.map()
 }

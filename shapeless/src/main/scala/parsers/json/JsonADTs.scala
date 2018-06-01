@@ -25,10 +25,6 @@ object JsonADTs {
       case JsonNull => "null"
     }
 
-    def unstringify(json: String): JsonObject = {
-      json
-    }
-
     private def stringifyField(field: (String, Json)): String = {
       val (name, value) = field
       s"${escape(name)}:${stringify(value)}"
